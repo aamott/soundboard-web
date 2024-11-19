@@ -326,37 +326,7 @@ button:active {
     color: #666;
 }
 
-.color-option {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.color-option:last-child {
-    margin-bottom: 0;
-}
-
-.color-option label {
-    font-size: 0.9rem;
-    color: #333;
-}
-
-.color-select {
-    width: 32px;
-    height: 32px;
-    border: 2px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.color-select:hover {
-    transform: scale(1.1);
-}
-
-#export-theme-btn,
-#import-theme-btn {
+.dropdown-section button {
     width: 100%;
     padding: 8px;
     margin: 4px 0;
@@ -367,8 +337,7 @@ button:active {
     transition: background-color 0.2s;
 }
 
-#export-theme-btn:hover,
-#import-theme-btn:hover {
+.dropdown-section button:hover {
     background: #e0e0e0;
 }
 
