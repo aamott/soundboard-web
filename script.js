@@ -4,10 +4,10 @@ const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
 // Default button colors that can be customized
 let BUTTON_COLORS = {
-    'Green': '#4CAF50',
-    'Blue': '#2196F3',
-    'Purple': '#9C27B0',
-    'Orange': '#FF9800',
+    'Background': '#FFFFFF',
+    'Foreground': '#FFFFFF',
+    'Button': '#9C27B0',
+    'Foreground2': '#FF9800',
     'Cyan': '#00BCD4',
     'Indigo': '#3F51B5',
     'Pink': '#FF4081',
@@ -29,9 +29,9 @@ function saveCustomColors() {
 
 // Theme Management
 const defaultTheme = {
-    backgroundColor: '#ffffff',
-    buttonColor: '#4CAF50',
-    textColor: '#ffffff'
+    backgroundColor: '#FFFFFF',  // Set to white
+    buttonColor: '#9C27B0',     // Set to purple
+    textColor: '#FFFFFF'        // Set to white
 };
 
 let currentTheme = { ...defaultTheme };
@@ -622,6 +622,50 @@ document.getElementById('import-theme-btn').addEventListener('click', () => {
     input.click();
 });
 
+// Reset functions
+function resetTheme() {
+    if (confirm('This will reset all color customizations to default. Make sure to export your theme first if you want to save it. Continue?')) {
+        currentTheme = { ...defaultTheme };
+        applyTheme(currentTheme);
+        BUTTON_COLORS = {
+            'Background': '#FFFFFF',
+            'Foreground': '#FFFFFF',
+            'Button': '#9C27B0',
+            'Foreground2': '#FF9800',
+            'Cyan': '#00BCD4',
+            'Indigo': '#3F51B5',
+            'Pink': '#FF4081',
+            'Teal': '#009688'
+        };
+        saveCustomColors();
+    }
+}
+
+function resetSoundboard() {
+    if (confirm('This will erase all sounds and settings. Make sure to export your soundboard first if you want to save it. Continue?')) {
+        // Clear all buttons
+        while (soundboard.firstChild) {
+            soundboard.removeChild(soundboard.firstChild);
+        }
+        
+        // Clear localStorage except theme
+        const savedTheme = localStorage.getItem('soundboardTheme');
+        localStorage.clear();
+        if (savedTheme) {
+            localStorage.setItem('soundboardTheme', savedTheme);
+        }
+        
+        // Reset keyboard shortcuts
+        keyboardShortcuts = {};
+        
+        // Clear any other state
+        selectedButton = null;
+        draggedButton = null;
+        isRecording = false;
+        recordBtn.textContent = '⏺️ Record';
+    }
+}
+
 // Session Management
 function saveSession() {
     const buttons = Array.from(soundboard.getElementsByClassName('button')).map(button => ({
@@ -737,6 +781,9 @@ importBtn.addEventListener('click', () => {
     
     input.click();
 });
+
+document.getElementById('reset-theme-btn').addEventListener('click', resetTheme);
+document.getElementById('reset-soundboard-btn').addEventListener('click', resetSoundboard);
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {

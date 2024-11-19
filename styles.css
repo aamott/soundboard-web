@@ -8,6 +8,7 @@
     --gray: #6c757d;
     --shadow: 0 2px 5px rgba(0,0,0,0.2);
     --transition: all 0.3s ease;
+    --text: white;
 }
 
 body {
@@ -271,7 +272,7 @@ button:active {
     border: none;
     border-radius: 4px;
     background: var(--primary);
-    color: white;
+    color: var(--text);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -311,8 +312,12 @@ button:active {
 }
 
 .dropdown-section {
-    padding: 12px 0;
+    padding: 16px 0;
     border-bottom: 1px solid #eee;
+}
+
+.dropdown-section:first-child {
+    padding-top: 0;
 }
 
 .dropdown-section:last-child {
@@ -326,19 +331,63 @@ button:active {
     color: #666;
 }
 
-.dropdown-section button {
+.colors-subsection {
+    margin: 16px 0;
+    padding: 16px;
+    background: #f5f5f5;
+    border-radius: 6px;
+}
+
+.colors-subsection h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.color-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.color-option:last-child {
+    margin-bottom: 0;
+}
+
+.color-option label {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.color-select {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-select:hover {
+    transform: scale(1.1);
+}
+
+.dropdown-section button:not(.color-select):not(.icon-button) {
     width: 100%;
     padding: 8px;
     margin: 4px 0;
     border: none;
     border-radius: 4px;
-    background: #f5f5f5;
+    background: var(--primary);
+    color: var(--text);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
 }
 
-.dropdown-section button:hover {
-    background: #e0e0e0;
+.dropdown-section button:not(.color-select):not(.icon-button):hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
 
 /* Responsive Design */
