@@ -402,12 +402,10 @@ contextMenu.addEventListener('click', (e) => {
                     return;
                 }
                 
-                // Remove old shortcut if it exists
-                const oldShortcut = selectedButton.querySelector('.shortcut')?.textContent;
-                if (oldShortcut) {
-                    removeKeyboardShortcut(selectedButton, oldShortcut);
-                }
+                // Remove old shortcut
+                removeKeyboardShortcut(selectedButton);
                 
+                // Add new shortcut
                 addKeyboardShortcut(selectedButton, event.key);
                 updateButtonContent(selectedButton, event.key);
                 saveSession();
@@ -426,10 +424,7 @@ contextMenu.addEventListener('click', (e) => {
         case 'delete':
             if (confirm('Delete this sound button?')) {
                 // Remove keyboard shortcut if it exists
-                const shortcut = selectedButton.querySelector('.shortcut')?.textContent;
-                if (shortcut) {
-                    removeKeyboardShortcut(selectedButton, shortcut);
-                }
+                removeKeyboardShortcut(selectedButton);
                 selectedButton.remove();
                 saveSession();
             }
@@ -440,20 +435,26 @@ contextMenu.addEventListener('click', (e) => {
 
 // Add keyboard shortcut functionality
 function addKeyboardShortcut(button, key) {
+    // Remove old shortcut if it exists
+    if (button.keyHandler) {
+        document.removeEventListener('keydown', button.keyHandler);
+    }
+    
     const handler = (event) => {
         if (event.key === key && !isRecording && event.target.tagName !== 'INPUT') {
             playAudio(button.dataset.audioData);
         }
     };
-    button.dataset.shortcutHandler = handler;
+    
+    // Store the handler function on the button element
+    button.keyHandler = handler;
     document.addEventListener('keydown', handler);
 }
 
-function removeKeyboardShortcut(button, key) {
-    const handler = button.dataset.shortcutHandler;
-    if (handler) {
-        document.removeEventListener('keydown', handler);
-        delete button.dataset.shortcutHandler;
+function removeKeyboardShortcut(button) {
+    if (button.keyHandler) {
+        document.removeEventListener('keydown', button.keyHandler);
+        button.keyHandler = null;
     }
 }
 
