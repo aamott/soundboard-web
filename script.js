@@ -216,6 +216,7 @@ contextMenu.innerHTML = `
         <li data-action="rename">Rename</li>
         <li data-action="record">Record Again</li>
         <li data-action="shortcut">Set Shortcut</li>
+        <li data-action="remove-shortcut">Remove Shortcut</li>
         <li data-action="color">Change Color</li>
         <li data-action="delete" style="background-color: #ffebee; color: #d32f2f;">Delete</li>
     </ul>
@@ -392,13 +393,41 @@ contextMenu.addEventListener('click', (e) => {
                 z-index: 1000;
                 text-align: center;
             `;
-            modal.innerHTML = '<p>Press any key for shortcut...</p>';
+            
+            modal.innerHTML = `
+                <p style="margin-top: 0;">Press any key for shortcut...</p>
+                <p style="font-size: 0.9em; color: #666;">Press Escape to cancel</p>
+                <button id="cancelShortcut" style="
+                    margin-top: 15px;
+                    padding: 8px 16px;
+                    background: #f5f5f5;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    color: #666;
+                ">Cancel</button>
+            `;
+            
             document.body.appendChild(modal);
             
+            // Add click handler for cancel button
+            const cancelButton = modal.querySelector('#cancelShortcut');
+            cancelButton.addEventListener('click', () => {
+                document.removeEventListener('keydown', keyHandler);
+                document.body.removeChild(modal);
+            });
+            
             const keyHandler = (event) => {
+                // Allow escape to cancel
+                if (event.key === 'Escape') {
+                    document.removeEventListener('keydown', keyHandler);
+                    document.body.removeChild(modal);
+                    return;
+                }
+                
                 event.preventDefault();
                 // Exclude some system keys
-                if (['Escape', 'Tab', 'CapsLock', 'Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
+                if (['Tab', 'CapsLock', 'Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
                     return;
                 }
                 
@@ -413,6 +442,13 @@ contextMenu.addEventListener('click', (e) => {
                 document.body.removeChild(modal);
             };
             document.addEventListener('keydown', keyHandler);
+            break;
+            
+        case 'remove-shortcut':
+            hideContextMenu();
+            removeKeyboardShortcut(selectedButton);
+            updateButtonContent(selectedButton, '');
+            saveSession();
             break;
             
         case 'color':

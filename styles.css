@@ -214,10 +214,20 @@ button:active {
 
 #context-menu li[data-action="delete"] {
     border-top: 1px solid #eee;
+    margin-top: 4px;
+    padding-top: 8px;
 }
 
 #context-menu li[data-action="delete"]:hover {
     background-color: #ffd7d7;
+}
+
+#context-menu li[data-action="remove-shortcut"] {
+    color: #ff9800;  /* Orange warning color */
+}
+
+#context-menu li[data-action="remove-shortcut"]:hover {
+    background-color: #fff3e0;  /* Light orange background on hover */
 }
 
 @keyframes pulse {
