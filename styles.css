@@ -236,6 +236,142 @@ button:active {
     100% { opacity: 1; transform: scale(1); }
 }
 
+/* Header and Settings */
+#header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* Title - Controls - Settings */
+    align-items: center;
+    gap: 20px;
+    z-index: 1000;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.main-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.main-controls button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.main-controls button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.settings-container {
+    position: relative;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.icon-button:hover {
+    background-color: #f5f5f5;
+}
+
+#settings-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 16px;
+    min-width: 240px;
+}
+
+.dropdown-section {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.dropdown-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.dropdown-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    color: #666;
+}
+
+.color-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.color-option:last-child {
+    margin-bottom: 0;
+}
+
+.color-option label {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.color-select {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-select:hover {
+    transform: scale(1.1);
+}
+
+#export-theme-btn,
+#import-theme-btn {
+    width: 100%;
+    padding: 8px;
+    margin: 4px 0;
+    border: none;
+    border-radius: 4px;
+    background: #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#export-theme-btn:hover,
+#import-theme-btn:hover {
+    background: #e0e0e0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .control-group {

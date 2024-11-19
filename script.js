@@ -1,7 +1,9 @@
 // Constants
-const GRID_SIZE = 16;
+const GRID_SIZE = 4;
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
-const BUTTON_COLORS = {
+
+// Default button colors that can be customized
+let BUTTON_COLORS = {
     'Green': '#4CAF50',
     'Blue': '#2196F3',
     'Purple': '#9C27B0',
@@ -12,6 +14,63 @@ const BUTTON_COLORS = {
     'Teal': '#009688'
 };
 
+// Load custom colors from localStorage
+function loadCustomColors() {
+    const savedColors = localStorage.getItem('customButtonColors');
+    if (savedColors) {
+        BUTTON_COLORS = JSON.parse(savedColors);
+    }
+}
+
+// Save custom colors to localStorage
+function saveCustomColors() {
+    localStorage.setItem('customButtonColors', JSON.stringify(BUTTON_COLORS));
+}
+
+// Theme Management
+const defaultTheme = {
+    backgroundColor: '#ffffff',
+    buttonColor: '#4CAF50',
+    textColor: '#ffffff'
+};
+
+let currentTheme = { ...defaultTheme };
+
+// Load theme from localStorage
+function loadTheme() {
+    const savedTheme = localStorage.getItem('soundboardTheme');
+    if (savedTheme) {
+        currentTheme = JSON.parse(savedTheme);
+        applyTheme(currentTheme);
+    }
+}
+
+// Apply theme to the UI
+function applyTheme(theme) {
+    document.body.style.backgroundColor = theme.backgroundColor;
+    document.documentElement.style.setProperty('--primary', theme.buttonColor);
+    document.documentElement.style.setProperty('--text', theme.textColor);
+    
+    // Update color buttons
+    document.querySelectorAll('.color-select').forEach(button => {
+        const type = button.dataset.colorType;
+        switch(type) {
+            case 'background':
+                button.style.backgroundColor = theme.backgroundColor;
+                break;
+            case 'button':
+                button.style.backgroundColor = theme.buttonColor;
+                break;
+            case 'text':
+                button.style.backgroundColor = theme.textColor;
+                break;
+        }
+    });
+
+    // Save theme to localStorage
+    localStorage.setItem('soundboardTheme', JSON.stringify(theme));
+}
+
 // DOM Elements
 const soundboard = document.getElementById('soundboard');
 const recordBtn = document.getElementById('record-btn');
@@ -19,6 +78,8 @@ const editBtn = document.getElementById('edit-btn');
 const exportBtn = document.getElementById('export-btn');
 const importBtn = document.getElementById('import-btn');
 const contextMenu = document.getElementById('context-menu');
+const settingsBtn = document.getElementById('settings-btn');
+const settingsDropdown = document.getElementById('settings-dropdown');
 
 // State Management
 let isRecording = false;
@@ -27,6 +88,7 @@ let mediaRecorder = null;
 let audioChunks = [];
 let selectedButton = null;
 let draggedButton = null;
+let isSettingsOpen = false;
 
 // Audio Recording
 async function startRecording() {
@@ -110,7 +172,7 @@ function createButton(audioData, shortcutKey = '', name = 'Sound', position = nu
         const gridCellHeight = rect.height / GRID_SIZE;
         
         button.style.left = Math.floor(Math.random() * (GRID_SIZE - 2)) * gridCellWidth + 'px';
-        button.style.top = Math.floor(Math.random() * (GRID_SIZE - 2)) * gridCellHeight + 'px';
+        button.style.top = Math.floor(Math.random() * 2) * gridCellHeight + 'px';
     }
 
     soundboard.appendChild(button);
@@ -222,7 +284,7 @@ contextMenu.innerHTML = `
     </ul>
 `;
 
-function createColorPicker() {
+function createColorPicker(currentColor, onColorSelect) {
     const modal = document.createElement('div');
     modal.className = 'color-picker-modal';
     modal.style.cssText = `
@@ -238,112 +300,82 @@ function createColorPicker() {
         min-width: 300px;
     `;
 
-    const title = document.createElement('h3');
-    title.textContent = 'Choose Color';
-    title.style.marginTop = '0';
-    modal.appendChild(title);
-
-    // Default colors
-    const colorGrid = document.createElement('div');
-    colorGrid.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 15px;
+    const content = document.createElement('div');
+    content.innerHTML = `
+        <h2 style="margin: 0 0 16px 0; color: #333; font-size: 1.2rem;">Color Palette</h2>
+        <div class="predefined-colors" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+            ${Object.entries(BUTTON_COLORS).map(([name, color]) => `
+                <div class="color-option-container" style="display: flex; align-items: center; gap: 4px;">
+                    <button class="color-option" style="
+                        background-color: ${color};
+                        width: 32px;
+                        height: 32px;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    " data-color="${color}">
+                    </button>
+                    <button class="edit-color-btn" style="
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 1.2rem;
+                        padding: 4px;
+                    " data-color-name="${name}">✏️</button>
+                </div>
+            `).join('')}
+        </div>
+        <div class="custom-color" style="margin-top: 16px;">
+            <input type="color" value="${currentColor}" style="width: 100%;">
+            <label style="display: block; margin-top: 8px; color: #666;">Custom Color</label>
+        </div>
     `;
 
-    Object.entries(BUTTON_COLORS).forEach(([name, color]) => {
-        const colorButton = document.createElement('button');
-        colorButton.style.cssText = `
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            border: 2px solid ${color};
-            background-color: ${color};
-            cursor: pointer;
-            transition: transform 0.2s;
-        `;
-        colorButton.title = name;
-        
-        colorButton.addEventListener('click', () => {
-            selectedButton.dataset.color = color;
-            selectedButton.style.backgroundColor = color;
-            saveSession();
+    modal.appendChild(content);
+
+    // Event Handlers
+    content.querySelectorAll('.color-option').forEach(button => {
+        button.addEventListener('click', () => {
+            onColorSelect(button.dataset.color);
             document.body.removeChild(modal);
         });
-
-        colorButton.addEventListener('mouseover', () => {
-            colorButton.style.transform = 'scale(1.1)';
-        });
-
-        colorButton.addEventListener('mouseout', () => {
-            colorButton.style.transform = 'scale(1)';
-        });
-
-        colorGrid.appendChild(colorButton);
     });
 
-    modal.appendChild(colorGrid);
+    // Edit button handlers
+    content.querySelectorAll('.edit-color-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const colorName = button.dataset.colorName;
+            const input = document.createElement('input');
+            input.type = 'color';
+            input.value = BUTTON_COLORS[colorName];
+            
+            input.addEventListener('change', (e) => {
+                const newColor = e.target.value;
+                BUTTON_COLORS[colorName] = newColor;
+                saveCustomColors();
+                
+                // Update the color button
+                const colorBtn = button.previousElementSibling;
+                colorBtn.style.backgroundColor = newColor;
+                colorBtn.dataset.color = newColor;
+            });
+            
+            input.click();
+        });
+    });
 
-    // Custom color picker
-    const customColorContainer = document.createElement('div');
-    customColorContainer.style.cssText = `
-        border-top: 1px solid #eee;
-        padding-top: 15px;
-        text-align: center;
-    `;
-
-    const customColorInput = document.createElement('input');
-    customColorInput.type = 'color';
-    customColorInput.style.cssText = `
-        width: 100px;
-        height: 40px;
-        padding: 0;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    `;
-
-    const applyButton = document.createElement('button');
-    applyButton.textContent = 'Apply Custom Color';
-    applyButton.style.cssText = `
-        margin-left: 10px;
-        padding: 8px 16px;
-        background: #007BFF;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    `;
-
-    applyButton.addEventListener('click', () => {
-        selectedButton.dataset.color = customColorInput.value;
-        selectedButton.style.backgroundColor = customColorInput.value;
-        saveSession();
+    content.querySelector('input[type="color"]').addEventListener('change', (e) => {
+        onColorSelect(e.target.value);
         document.body.removeChild(modal);
     });
 
-    customColorContainer.appendChild(customColorInput);
-    customColorContainer.appendChild(applyButton);
-    modal.appendChild(customColorContainer);
-
-    // Close button
-    const closeButton = document.createElement('button');
-    closeButton.textContent = '×';
-    closeButton.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: none;
-        border: none;
-        font-size: 20px;
-        cursor: pointer;
-        color: #666;
-    `;
-    closeButton.addEventListener('click', () => {
-        document.body.removeChild(modal);
+    // Close when clicking outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
     });
-    modal.appendChild(closeButton);
 
     return modal;
 }
@@ -453,7 +485,11 @@ contextMenu.addEventListener('click', (e) => {
             
         case 'color':
             hideContextMenu();
-            const colorPicker = createColorPicker();
+            const colorPicker = createColorPicker(selectedButton.dataset.color, (color) => {
+                selectedButton.dataset.color = color;
+                selectedButton.style.backgroundColor = color;
+                saveSession();
+            });
             document.body.appendChild(colorPicker);
             break;
             
@@ -493,6 +529,75 @@ function removeKeyboardShortcut(button) {
         button.keyHandler = null;
     }
 }
+
+// Settings Management
+settingsBtn.addEventListener('click', () => {
+    isSettingsOpen = !isSettingsOpen;
+    settingsDropdown.style.display = isSettingsOpen ? 'block' : 'none';
+});
+
+// Close settings when clicking outside
+document.addEventListener('click', (e) => {
+    if (!settingsBtn.contains(e.target) && !settingsDropdown.contains(e.target)) {
+        isSettingsOpen = false;
+        settingsDropdown.style.display = 'none';
+    }
+});
+
+// Color Selection
+document.querySelectorAll('.color-select').forEach(button => {
+    button.addEventListener('click', () => {
+        const type = button.dataset.colorType;
+        const currentColor = button.style.backgroundColor || defaultTheme[`${type}Color`];
+        
+        const colorPicker = createColorPicker(currentColor, (color) => {
+            currentTheme[`${type}Color`] = color;
+            applyTheme(currentTheme);
+        });
+        
+        document.body.appendChild(colorPicker);
+    });
+});
+
+// Theme Import/Export
+document.getElementById('export-theme-btn').addEventListener('click', () => {
+    const themeString = JSON.stringify(currentTheme);
+    const blob = new Blob([themeString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'soundboard-theme.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+document.getElementById('import-theme-btn').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = (event) => {
+            try {
+                const theme = JSON.parse(event.target.result);
+                currentTheme = theme;
+                applyTheme(theme);
+            } catch (error) {
+                alert('Invalid theme file');
+            }
+        };
+        
+        reader.readAsText(file);
+    });
+    
+    input.click();
+});
 
 // Session Management
 function saveSession() {
@@ -611,5 +716,10 @@ importBtn.addEventListener('click', () => {
 });
 
 // Initialize
-loadSession();
+document.addEventListener('DOMContentLoaded', () => {
+    loadSession();
+    loadTheme();
+    loadCustomColors();
+});
+
 setInterval(saveSession, AUTO_SAVE_INTERVAL);
