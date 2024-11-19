@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Soundboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAArNJREFUWEftl01IVFEUx3/nvWmyD6IPg4pCW7RpYdQiihZBtYo+dt2iWtQmiIJatAhaFC2CLEJoYdEmaBNE0SIoaGO0KoI+IKKgRdCiQmzRNO/dOHPnzXvjzPNNvhlXzWYe7953z/mf/7n3nHuF/3zpf45PVgBWKhCPx7dYlrVbRLYrpTYZY9YAa0Vk2hgzparqh3Q6PWyM+VipclUBxGKxTUqpE8aYE8aYnUC4XGDGmHERGQAe2rb9PZvN/vKKURFAW1vbOhG5DFwSkQ1eAbrZG2MGReR2KpV6XiqeogBisdhOpdRDEdkNWG7BfNobY34ppW7Ztv2w0J4FAHEcR4wxT0RknR9wPn2MMb9V7SAkEok1xpgXQLMxRvkFUKqfMeaniNRns9mJ+fn5GQcgHo/vsCzrNRD1rYDHjkqpI6lU6pUAJBKJiDHmE7DeY8dQ5saYaWPMvlQq9U0BxOPxQyLyHAgFEcBrH2PMX6XUiQYRuQPUBgXgtZ8x5l6DiNwErgQJICRyv0FEzgH3gwTgVQGl1IWGWCx2Syl1NUgAXvsppW42JBKJKmPMpIhEvXYOY26MmVNK1TaIyAiwN4wgXvoaY0ZFZKtSSgHvgd1eOoY1E5GPtm3vdR7D58CZsIJ57HfPtu2LziPYBEx47BjW7HMmk9nsvIZRpdTFsKJ57HfTtu1rzmsYMsacDSuax35XM5nMY+c9MAWsCSugS79pYCqTyaw2xpwGngYZXCm1r+A4jsfjR5VSL4MoBWPM0VQq9bxgK3YcJywi74BtQQAQkQ+2be8vOY47+8FhEXkWBAARuWTb9r2iAE4/EbkOXA8IwA3btq+VBNDa2lpbXV39FdgYEIBvmUxmXTabnSsJwFEhkUjsMMY8ARr9BmCM+aCUupBOp4dL5b+oE7qVaGlpaY5EIseMMQeAJqCuQqf5AYyJyHAul3vR2dk5Wq7PfwDz6nEwZB5LkQAAAABJRU5ErkJggg==">
+</head>
+<body>
+    <h1>Interactive Soundboard</h1>
+    
+    <div class="controls">
+        <div class="control-group">
+            <button id="record-btn">Record Sound</button>
+            <button id="edit-btn">Edit Mode</button>
+        </div>
+        <div class="control-group">
+            <button id="export-btn">Export Session</button>
+            <button id="import-btn">Import Session</button>
+        </div>
+    </div>
+
+    <div id="soundboard">
+        <div class="grid-overlay"></div>
+    </div>
+
+    <div class="context-menu">
+        <ul>
+            <li data-action="rename">Rename</li>
+            <li data-action="record">Record Again</li>
+            <li data-action="shortcut">Set Shortcut</li>
+            <li data-action="delete">Delete</li>
+        </ul>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
