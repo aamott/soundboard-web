@@ -333,10 +333,33 @@ function createColorPicker(currentColor, onColorSelect) {
 
     modal.appendChild(content);
 
+    // Convert RGB to Hex color
+    function rgbToHex(color) {
+        // If already hex, return as is
+        if (color.startsWith('#')) {
+            return color;
+        }
+        
+        // Extract RGB values
+        const rgb = color.match(/\d+/g);
+        if (!rgb || rgb.length !== 3) {
+            return color;
+        }
+        
+        // Convert to hex
+        const hex = rgb.map(x => {
+            const hex = parseInt(x).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        });
+        
+        return '#' + hex.join('');
+    }
+
     // Event Handlers
     content.querySelectorAll('.color-option').forEach(button => {
         button.addEventListener('click', () => {
-            onColorSelect(button.dataset.color);
+            const color = rgbToHex(button.dataset.color);
+            onColorSelect(color);
             document.body.removeChild(modal);
         });
     });
@@ -348,7 +371,7 @@ function createColorPicker(currentColor, onColorSelect) {
             const colorName = button.dataset.colorName;
             const input = document.createElement('input');
             input.type = 'color';
-            input.value = BUTTON_COLORS[colorName];
+            input.value = rgbToHex(BUTTON_COLORS[colorName]);
             
             input.addEventListener('change', (e) => {
                 const newColor = e.target.value;
