@@ -240,7 +240,7 @@ function stopRecording() {
 // Button Management
 function createButton(audioData, shortcutKey = '', name = 'Sound', position = null, color = null) {
     const button = document.createElement('button');
-    button.className = 'button';
+    button.className = 'sound-button';
     button.dataset.audioData = audioData;
     button.dataset.name = name;
     button.dataset.color = color || Object.values(BUTTON_COLORS)[Math.floor(Math.random() * Object.values(BUTTON_COLORS).length)];
@@ -734,7 +734,7 @@ document.addEventListener('click', (e) => {
 
 // Session Management
 function saveSession() {
-    const buttons = Array.from(soundboard.getElementsByClassName('button')).map(button => ({
+    const buttons = Array.from(soundboard.getElementsByClassName('sound-button')).map(button => ({
         name: button.dataset.name,
         shortcut: button.querySelector('.shortcut')?.textContent || '',
         position: {
@@ -752,7 +752,7 @@ function loadSession() {
     const session = JSON.parse(localStorage.getItem('soundboardSession'));
     if (!session) return;
     
-    const buttons = soundboard.getElementsByClassName('button');
+    const buttons = soundboard.getElementsByClassName('sound-button');
     while (buttons.length > 0) {
         buttons[0].remove();
     }
@@ -859,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetSoundboardBtn.addEventListener('click', () => {
             if (confirm('This will delete all sound buttons. Are you sure you want to reset the soundboard?')) {
                 // Clear all buttons
-                const buttons = soundboard.getElementsByClassName('button');
+                const buttons = soundboard.getElementsByClassName('sound-button');
                 while (buttons.length > 0) {
                     buttons[0].remove();
                 }
