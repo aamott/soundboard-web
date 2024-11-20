@@ -9,6 +9,8 @@
     --shadow: 0 2px 5px rgba(0,0,0,0.2);
     --transition: all 0.3s ease;
     --text: white;
+    --button-color: #9C27B0;
+    --text-color: #FFFFFF;
 }
 
 body {
@@ -89,8 +91,8 @@ h1 {
 .button {
     position: absolute;
     padding: 15px 25px;
-    background-color: var(--primary);
-    color: white;
+    background-color: var(--button-color);
+    color: var(--text-color);
     border: none;
     border-radius: 8px;
     cursor: pointer;

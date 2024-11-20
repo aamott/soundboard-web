@@ -45,7 +45,13 @@ const settingsDropdown = document.getElementById('settings-dropdown');
 function loadCustomColors() {
     const savedColors = localStorage.getItem('customButtonColors');
     if (savedColors) {
-        BUTTON_COLORS = JSON.parse(savedColors);
+        const loadedColors = JSON.parse(savedColors);
+        // Update existing colors instead of reassigning
+        Object.keys(BUTTON_COLORS).forEach(key => {
+            if (loadedColors[key]) {
+                BUTTON_COLORS[key] = loadedColors[key];
+            }
+        });
     }
 }
 
@@ -73,8 +79,8 @@ const ThemeManager = {
 
     applyTheme(theme) {
         document.body.style.backgroundColor = theme.backgroundColor;
-        document.documentElement.style.setProperty('--primary', theme.buttonColor);
-        document.documentElement.style.setProperty('--text', theme.textColor);
+        document.documentElement.style.setProperty('--button-color', theme.buttonColor);
+        document.documentElement.style.setProperty('--text-color', theme.textColor);
         
         // Update color buttons
         document.querySelectorAll('.color-select').forEach(button => {
@@ -94,14 +100,16 @@ const ThemeManager = {
 
         // Save theme to localStorage
         localStorage.setItem('soundboardTheme', JSON.stringify(theme));
-        this.currentTheme = { ...theme };
+        this.currentTheme = theme;
     },
 
     reset() {
         if (confirm('This will reset all color customizations to default. Make sure to export your theme first if you want to save it. Continue?')) {
             this.currentTheme = { ...defaultTheme };
             this.applyTheme(this.currentTheme);
-            BUTTON_COLORS = {
+            
+            // Reset colors by updating existing properties
+            Object.assign(BUTTON_COLORS, {
                 'Background': '#FFFFFF',
                 'Foreground': '#000000',
                 'Button': '#9C27B0',
@@ -110,14 +118,18 @@ const ThemeManager = {
                 'Indigo': '#3F51B5',
                 'Pink': '#FF4081',
                 'Teal': '#009688'
-            };
+            });
             saveCustomColors();
         }
     },
 
     exportTheme() {
-        const themeString = JSON.stringify(this.currentTheme);
-        const blob = new Blob([themeString], { type: 'application/json' });
+        const themeData = JSON.stringify({
+            theme: this.currentTheme,
+            colors: BUTTON_COLORS
+        });
+        
+        const blob = new Blob([themeData], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         
         const a = document.createElement('a');
@@ -134,21 +146,33 @@ const ThemeManager = {
         input.type = 'file';
         input.accept = '.json';
         
-        input.addEventListener('change', (e) => {
+        input.onchange = (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
             
             reader.onload = (event) => {
                 try {
-                    const theme = JSON.parse(event.target.result);
-                    this.applyTheme(theme);
-                } catch (error) {
-                    alert('Invalid theme file');
+                    const data = JSON.parse(event.target.result);
+                    if (data.theme) {
+                        this.applyTheme(data.theme);
+                    }
+                    if (data.colors) {
+                        // Update colors instead of reassigning
+                        Object.keys(BUTTON_COLORS).forEach(key => {
+                            if (data.colors[key]) {
+                                BUTTON_COLORS[key] = data.colors[key];
+                            }
+                        });
+                        saveCustomColors();
+                    }
+                } catch (err) {
+                    console.error('Error importing theme:', err);
+                    alert('Invalid theme file format');
                 }
             };
             
             reader.readAsText(file);
-        });
+        };
         
         input.click();
     },
@@ -828,6 +852,22 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSession();
     ThemeManager.init();
     loadCustomColors();
+
+    // Add reset soundboard functionality
+    const resetSoundboardBtn = document.getElementById('reset-soundboard-btn');
+    if (resetSoundboardBtn) {
+        resetSoundboardBtn.addEventListener('click', () => {
+            if (confirm('This will delete all sound buttons. Are you sure you want to reset the soundboard?')) {
+                // Clear all buttons
+                const buttons = soundboard.getElementsByClassName('button');
+                while (buttons.length > 0) {
+                    buttons[0].remove();
+                }
+                // Clear session storage
+                localStorage.removeItem('soundboardSession');
+            }
+        });
+    }
 });
 
 setInterval(saveSession, AUTO_SAVE_INTERVAL);
