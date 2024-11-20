@@ -57,12 +57,11 @@ h1 {
     margin: 20px auto;
     border: 2px dashed transparent;
     border-radius: 10px;
-    overflow: hidden;
+    overflow: auto;
     transition: var(--transition);
 }
 
 .grid-overlay {
-    display: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -70,89 +69,57 @@ h1 {
     bottom: 0;
     pointer-events: none;
     transition: var(--transition);
-}
-
-#soundboard.edit-mode {
-    border-color: var(--primary);
-    background-color: rgba(0, 123, 255, 0.05);
-    box-shadow: inset 0 0 20px rgba(0, 123, 255, 0.1);
+    display: none;
+    background-image: 
+        linear-gradient(to right, rgba(0, 123, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 123, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    min-width: 100%;
+    min-height: 100%;
 }
 
 #soundboard.edit-mode .grid-overlay {
     display: block;
-    background-image: 
-        linear-gradient(to right, rgba(0, 123, 255, 0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0, 123, 255, 0.1) 1px, transparent 1px);
-    background-size: calc(100% / 16) calc(100% / 16);
 }
 
-button {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: var(--transition);
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    box-shadow: var(--shadow);
-}
-
-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-button:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-#record-btn {
-    background-color: var(--success);
-}
-
-#record-btn.recording {
-    background-color: var(--danger);
-    animation: pulse 1.5s infinite;
-}
-
-#edit-btn, #export-btn, #import-btn {
-    background-color: var(--primary);
+#soundboard.free-mode .grid-overlay {
+    display: none;
 }
 
 .button {
     position: absolute;
-    width: 100px;
-    height: 100px;
+    padding: 15px 25px;
+    background-color: var(--primary);
+    color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    user-select: none;
+    transition: transform 0.1s, box-shadow 0.1s;
+    z-index: 1;
+    font-weight: 800;
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10px;
-    color: white;
-    font-weight: 800;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    font-size: 1.4rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    min-width: 100px;
+    min-height: 100px;
+}
+
+.button.dragging {
+    z-index: 1000;
+    cursor: grabbing;
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.button.dragging {
-    opacity: 0.8;
-    transform: scale(1.05);
-    z-index: 1000;
 }
 
 .button .shortcut {
@@ -268,18 +235,37 @@ button:active {
 }
 
 .main-controls button {
-    padding: 8px 16px;
+    padding: 15px 25px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     background: var(--primary);
     color: var(--text);
+    font-size: 1.2rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow);
+    min-width: 150px;
 }
 
 .main-controls button:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.main-controls button:active {
+    transform: translateY(1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+#record-btn {
+    background-color: var(--success);
+}
+
+#record-btn.recording {
+    background-color: var(--danger);
+    animation: pulse 1.5s infinite;
 }
 
 .settings-container {

@@ -1,11 +1,11 @@
 // Constants
-const GRID_SIZE = 4;
+const GRID_SIZE = 50; // Grid size in pixels
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
 // Default button colors that can be customized
 let BUTTON_COLORS = {
     'Background': '#FFFFFF',
-    'Foreground': '#FFFFFF',
+    'Foreground': '#000000',
     'Button': '#9C27B0',
     'Foreground2': '#FF9800',
     'Cyan': '#00BCD4',
@@ -198,26 +198,60 @@ function updateButtonContent(button, shortcutKey = '') {
 }
 
 // Drag and Drop
+let isShiftPressed = false;
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') {
+        isShiftPressed = true;
+        soundboard.classList.add('free-mode');
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') {
+        isShiftPressed = false;
+        soundboard.classList.remove('free-mode');
+    }
+});
+
 document.addEventListener('mousemove', (e) => {
     if (!draggedButton) return;
     
     e.preventDefault();
     
     const rect = soundboard.getBoundingClientRect();
-    const gridCellWidth = rect.width / GRID_SIZE;
-    const gridCellHeight = rect.height / GRID_SIZE;
+    const scrollLeft = soundboard.scrollLeft;
+    const scrollTop = soundboard.scrollTop;
     
-    // Calculate position relative to soundboard
-    let left = e.clientX - rect.left - parseFloat(draggedButton.dataset.offsetX);
-    let top = e.clientY - rect.top - parseFloat(draggedButton.dataset.offsetY);
+    // Calculate position relative to soundboard including scroll
+    let left = e.clientX - rect.left + scrollLeft - parseFloat(draggedButton.dataset.offsetX);
+    let top = e.clientY - rect.top + scrollTop - parseFloat(draggedButton.dataset.offsetY);
     
-    // Snap to grid
-    left = Math.round(left / gridCellWidth) * gridCellWidth;
-    top = Math.round(top / gridCellHeight) * gridCellHeight;
+    // Snap to grid if shift is not pressed
+    if (!isShiftPressed) {
+        left = Math.round(left / GRID_SIZE) * GRID_SIZE;
+        top = Math.round(top / GRID_SIZE) * GRID_SIZE;
+    }
     
     // Keep within bounds
-    left = Math.max(0, Math.min(left, rect.width - draggedButton.offsetWidth));
-    top = Math.max(0, Math.min(top, rect.height - draggedButton.offsetHeight));
+    left = Math.max(0, left);
+    top = Math.max(0, top);
+    
+    // Auto-scroll when near edges
+    const SCROLL_MARGIN = 50;
+    const SCROLL_SPEED = 10;
+    
+    if (e.clientX - rect.left < SCROLL_MARGIN) {
+        soundboard.scrollLeft -= SCROLL_SPEED;
+    } else if (rect.right - e.clientX < SCROLL_MARGIN) {
+        soundboard.scrollLeft += SCROLL_SPEED;
+    }
+    
+    if (e.clientY - rect.top < SCROLL_MARGIN) {
+        soundboard.scrollTop -= SCROLL_SPEED;
+    } else if (rect.bottom - e.clientY < SCROLL_MARGIN) {
+        soundboard.scrollTop += SCROLL_SPEED;
+    }
     
     draggedButton.style.left = `${left}px`;
     draggedButton.style.top = `${top}px`;
@@ -300,9 +334,46 @@ function createColorPicker(currentColor, onColorSelect) {
         min-width: 300px;
     `;
 
+    const header = document.createElement('div');
+    header.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    `;
+    
+    const title = document.createElement('h2');
+    title.textContent = 'Color Palette';
+    title.style.cssText = `
+        margin: 0;
+        color: #333;
+        font-size: 1.2rem;
+    `;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0 8px;
+        color: #666;
+        transition: color 0.2s;
+    `;
+    closeBtn.addEventListener('mouseover', () => closeBtn.style.color = '#000');
+    closeBtn.addEventListener('mouseout', () => closeBtn.style.color = '#666');
+    closeBtn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+        document.removeEventListener('keydown', handleEscape);
+    });
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    modal.appendChild(header);
+
     const content = document.createElement('div');
     content.innerHTML = `
-        <h2 style="margin: 0 0 16px 0; color: #333; font-size: 1.2rem;">Color Palette</h2>
         <div class="predefined-colors" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
             ${Object.entries(BUTTON_COLORS).map(([name, color]) => `
                 <div class="color-option-container" style="display: flex; align-items: center; gap: 4px;">
@@ -399,6 +470,15 @@ function createColorPicker(currentColor, onColorSelect) {
             document.body.removeChild(modal);
         }
     });
+
+    // Handle escape key
+    function handleEscape(e) {
+        if (e.key === 'Escape' && modal.parentNode) {
+            document.body.removeChild(modal);
+            document.removeEventListener('keydown', handleEscape);
+        }
+    }
+    document.addEventListener('keydown', handleEscape);
 
     return modal;
 }
@@ -629,7 +709,7 @@ function resetTheme() {
         applyTheme(currentTheme);
         BUTTON_COLORS = {
             'Background': '#FFFFFF',
-            'Foreground': '#FFFFFF',
+            'Foreground': '#000000',
             'Button': '#9C27B0',
             'Foreground2': '#FF9800',
             'Cyan': '#00BCD4',
