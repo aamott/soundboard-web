@@ -1,9 +1,9 @@
 // Constants
-const GRID_SIZE = 50; // Grid size in pixels
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
+const GRID_SIZE = 8;
 
-// Default button colors that can be customized
-let BUTTON_COLORS = {
+// Default Colors and Theme
+const BUTTON_COLORS = {
     'Background': '#FFFFFF',
     'Foreground': '#000000',
     'Button': '#9C27B0',
@@ -13,6 +13,33 @@ let BUTTON_COLORS = {
     'Pink': '#FF4081',
     'Teal': '#009688'
 };
+
+const defaultTheme = {
+    backgroundColor: '#FFFFFF',
+    buttonColor: '#9C27B0',
+    textColor: '#FFFFFF'
+};
+
+// Global State
+let currentTheme = { ...defaultTheme };
+let isRecording = false;
+let isEditMode = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let selectedButton = null;
+let draggedButton = null;
+let isSettingsOpen = false;
+let isShiftPressed = false;
+
+// DOM Elements
+const soundboard = document.getElementById('soundboard');
+const recordBtn = document.getElementById('record-btn');
+const editBtn = document.getElementById('edit-btn');
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const contextMenu = document.getElementById('context-menu');
+const settingsBtn = document.getElementById('settings-btn');
+const settingsDropdown = document.getElementById('settings-dropdown');
 
 // Load custom colors from localStorage
 function loadCustomColors() {
@@ -28,14 +55,6 @@ function saveCustomColors() {
 }
 
 // Theme Management
-const defaultTheme = {
-    backgroundColor: '#FFFFFF',  // Set to white
-    buttonColor: '#9C27B0',     // Set to purple
-    textColor: '#FFFFFF'        // Set to white
-};
-
-let currentTheme = { ...defaultTheme };
-
 // Load theme from localStorage
 function loadTheme() {
     const savedTheme = localStorage.getItem('soundboardTheme');
@@ -70,25 +89,6 @@ function applyTheme(theme) {
     // Save theme to localStorage
     localStorage.setItem('soundboardTheme', JSON.stringify(theme));
 }
-
-// DOM Elements
-const soundboard = document.getElementById('soundboard');
-const recordBtn = document.getElementById('record-btn');
-const editBtn = document.getElementById('edit-btn');
-const exportBtn = document.getElementById('export-btn');
-const importBtn = document.getElementById('import-btn');
-const contextMenu = document.getElementById('context-menu');
-const settingsBtn = document.getElementById('settings-btn');
-const settingsDropdown = document.getElementById('settings-dropdown');
-
-// State Management
-let isRecording = false;
-let isEditMode = false;
-let mediaRecorder = null;
-let audioChunks = [];
-let selectedButton = null;
-let draggedButton = null;
-let isSettingsOpen = false;
 
 // Audio Recording
 async function startRecording() {
@@ -198,8 +198,6 @@ function updateButtonContent(button, shortcutKey = '') {
 }
 
 // Drag and Drop
-let isShiftPressed = false;
-
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Shift') {
         isShiftPressed = true;
