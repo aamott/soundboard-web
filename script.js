@@ -54,41 +54,127 @@ function saveCustomColors() {
     localStorage.setItem('customButtonColors', JSON.stringify(BUTTON_COLORS));
 }
 
-// Theme Management
-// Load theme from localStorage
-function loadTheme() {
-    const savedTheme = localStorage.getItem('soundboardTheme');
-    if (savedTheme) {
-        currentTheme = JSON.parse(savedTheme);
-        applyTheme(currentTheme);
-    }
-}
+// Theme Management Module
+const ThemeManager = {
+    currentTheme: { ...defaultTheme },
 
-// Apply theme to the UI
-function applyTheme(theme) {
-    document.body.style.backgroundColor = theme.backgroundColor;
-    document.documentElement.style.setProperty('--primary', theme.buttonColor);
-    document.documentElement.style.setProperty('--text', theme.textColor);
-    
-    // Update color buttons
-    document.querySelectorAll('.color-select').forEach(button => {
-        const type = button.dataset.colorType;
-        switch(type) {
-            case 'background':
-                button.style.backgroundColor = theme.backgroundColor;
-                break;
-            case 'button':
-                button.style.backgroundColor = theme.buttonColor;
-                break;
-            case 'text':
-                button.style.backgroundColor = theme.textColor;
-                break;
+    init() {
+        this.loadTheme();
+        this.setupEventListeners();
+    },
+
+    loadTheme() {
+        const savedTheme = localStorage.getItem('soundboardTheme');
+        if (savedTheme) {
+            this.currentTheme = JSON.parse(savedTheme);
+            this.applyTheme(this.currentTheme);
         }
-    });
+    },
 
-    // Save theme to localStorage
-    localStorage.setItem('soundboardTheme', JSON.stringify(theme));
-}
+    applyTheme(theme) {
+        document.body.style.backgroundColor = theme.backgroundColor;
+        document.documentElement.style.setProperty('--primary', theme.buttonColor);
+        document.documentElement.style.setProperty('--text', theme.textColor);
+        
+        // Update color buttons
+        document.querySelectorAll('.color-select').forEach(button => {
+            const type = button.dataset.colorType;
+            switch(type) {
+                case 'background':
+                    button.style.backgroundColor = theme.backgroundColor;
+                    break;
+                case 'button':
+                    button.style.backgroundColor = theme.buttonColor;
+                    break;
+                case 'text':
+                    button.style.backgroundColor = theme.textColor;
+                    break;
+            }
+        });
+
+        // Save theme to localStorage
+        localStorage.setItem('soundboardTheme', JSON.stringify(theme));
+        this.currentTheme = { ...theme };
+    },
+
+    reset() {
+        if (confirm('This will reset all color customizations to default. Make sure to export your theme first if you want to save it. Continue?')) {
+            this.currentTheme = { ...defaultTheme };
+            this.applyTheme(this.currentTheme);
+            BUTTON_COLORS = {
+                'Background': '#FFFFFF',
+                'Foreground': '#000000',
+                'Button': '#9C27B0',
+                'Foreground2': '#FF9800',
+                'Cyan': '#00BCD4',
+                'Indigo': '#3F51B5',
+                'Pink': '#FF4081',
+                'Teal': '#009688'
+            };
+            saveCustomColors();
+        }
+    },
+
+    exportTheme() {
+        const themeString = JSON.stringify(this.currentTheme);
+        const blob = new Blob([themeString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'soundboard-theme.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    importTheme() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = (event) => {
+                try {
+                    const theme = JSON.parse(event.target.result);
+                    this.applyTheme(theme);
+                } catch (error) {
+                    alert('Invalid theme file');
+                }
+            };
+            
+            reader.readAsText(file);
+        });
+        
+        input.click();
+    },
+
+    setupEventListeners() {
+        // Color selection buttons
+        document.querySelectorAll('.color-select').forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.dataset.colorType;
+                const currentColor = button.style.backgroundColor || defaultTheme[`${type}Color`];
+                
+                const colorPickerModal = ColorPicker.create(currentColor, (color) => {
+                    this.currentTheme[`${type}Color`] = color;
+                    this.applyTheme(this.currentTheme);
+                });
+                
+                document.body.appendChild(colorPickerModal);
+            });
+        });
+
+        // Theme import/export buttons
+        document.getElementById('export-theme-btn')?.addEventListener('click', () => this.exportTheme());
+        document.getElementById('import-theme-btn')?.addEventListener('click', () => this.importTheme());
+        document.getElementById('reset-theme-btn')?.addEventListener('click', () => this.reset());
+    }
+};
 
 // Audio Recording
 async function startRecording() {
@@ -622,105 +708,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Color Selection
-document.querySelectorAll('.color-select').forEach(button => {
-    button.addEventListener('click', () => {
-        const type = button.dataset.colorType;
-        const currentColor = button.style.backgroundColor || defaultTheme[`${type}Color`];
-        
-        const colorPickerModal = ColorPicker.create(currentColor, (color) => {
-            currentTheme[`${type}Color`] = color;
-            applyTheme(currentTheme);
-        });
-        
-        document.body.appendChild(colorPickerModal);
-    });
-});
-
-// Theme Import/Export
-document.getElementById('export-theme-btn').addEventListener('click', () => {
-    const themeString = JSON.stringify(currentTheme);
-    const blob = new Blob([themeString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'soundboard-theme.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-});
-
-document.getElementById('import-theme-btn').addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    
-    input.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        
-        reader.onload = (event) => {
-            try {
-                const theme = JSON.parse(event.target.result);
-                currentTheme = theme;
-                applyTheme(theme);
-            } catch (error) {
-                alert('Invalid theme file');
-            }
-        };
-        
-        reader.readAsText(file);
-    });
-    
-    input.click();
-});
-
-// Reset functions
-function resetTheme() {
-    if (confirm('This will reset all color customizations to default. Make sure to export your theme first if you want to save it. Continue?')) {
-        currentTheme = { ...defaultTheme };
-        applyTheme(currentTheme);
-        BUTTON_COLORS = {
-            'Background': '#FFFFFF',
-            'Foreground': '#000000',
-            'Button': '#9C27B0',
-            'Foreground2': '#FF9800',
-            'Cyan': '#00BCD4',
-            'Indigo': '#3F51B5',
-            'Pink': '#FF4081',
-            'Teal': '#009688'
-        };
-        saveCustomColors();
-    }
-}
-
-function resetSoundboard() {
-    if (confirm('This will erase all sounds and settings. Make sure to export your soundboard first if you want to save it. Continue?')) {
-        // Clear all buttons
-        while (soundboard.firstChild) {
-            soundboard.removeChild(soundboard.firstChild);
-        }
-        
-        // Clear localStorage except theme
-        const savedTheme = localStorage.getItem('soundboardTheme');
-        localStorage.clear();
-        if (savedTheme) {
-            localStorage.setItem('soundboardTheme', savedTheme);
-        }
-        
-        // Reset keyboard shortcuts
-        keyboardShortcuts = {};
-        
-        // Clear any other state
-        selectedButton = null;
-        draggedButton = null;
-        isRecording = false;
-        recordBtn.textContent = '⏺️ Record';
-    }
-}
-
 // Session Management
 function saveSession() {
     const buttons = Array.from(soundboard.getElementsByClassName('button')).map(button => ({
@@ -837,13 +824,9 @@ importBtn.addEventListener('click', () => {
     input.click();
 });
 
-document.getElementById('reset-theme-btn').addEventListener('click', resetTheme);
-document.getElementById('reset-soundboard-btn').addEventListener('click', resetSoundboard);
-
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadSession();
-    loadTheme();
+    ThemeManager.init();
     loadCustomColors();
 });
 
