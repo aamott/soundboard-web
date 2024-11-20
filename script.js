@@ -304,6 +304,148 @@ soundboard.addEventListener('contextmenu', (e) => {
     e.preventDefault();
 });
 
+// Color Picker Module
+const ColorPicker = {
+    create(currentColor, onColorSelect) {
+        const modal = document.createElement('div');
+        modal.className = 'color-picker-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 300px;
+        `;
+
+        modal.innerHTML = this._createModalContent(currentColor);
+        this._attachEventListeners(modal, onColorSelect);
+        
+        return modal;
+    },
+
+    _createModalContent(currentColor) {
+        return `
+            <div class="color-picker-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="margin: 0; color: #333; font-size: 1.2rem;">Color Palette</h2>
+                <button class="close-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0 8px; color: #666;">&times;</button>
+            </div>
+            <div class="predefined-colors" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                ${Object.entries(BUTTON_COLORS).map(([name, color]) => `
+                    <div class="color-option-container" style="display: flex; align-items: center; gap: 4px;">
+                        <button class="color-option" style="
+                            background-color: ${color};
+                            width: 32px;
+                            height: 32px;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        " data-color="${color}"></button>
+                        <button class="edit-color-btn" style="
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            font-size: 1.2rem;
+                            padding: 4px;
+                        " data-color-name="${name}">✏️</button>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="custom-color" style="margin-top: 16px;">
+                <input type="color" value="${this._ensureHexColor(currentColor)}" style="width: 100%;">
+                <label style="display: block; margin-top: 8px; color: #666;">Custom Color</label>
+            </div>
+        `;
+    },
+
+    _attachEventListeners(modal, onColorSelect) {
+        // Close button
+        const closeBtn = modal.querySelector('.close-btn');
+        closeBtn.addEventListener('click', () => this._closeModal(modal));
+
+        // Predefined colors
+        modal.querySelectorAll('.color-option').forEach(button => {
+            button.addEventListener('click', () => {
+                const color = this._ensureHexColor(button.dataset.color);
+                onColorSelect(color);
+                this._closeModal(modal);
+            });
+        });
+
+        // Edit color buttons
+        modal.querySelectorAll('.edit-color-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const colorName = button.dataset.colorName;
+                const input = document.createElement('input');
+                input.type = 'color';
+                input.value = this._ensureHexColor(BUTTON_COLORS[colorName]);
+                
+                input.addEventListener('change', (e) => {
+                    const newColor = e.target.value;
+                    BUTTON_COLORS[colorName] = newColor;
+                    saveCustomColors();
+                    
+                    const colorBtn = button.previousElementSibling;
+                    colorBtn.style.backgroundColor = newColor;
+                    colorBtn.dataset.color = newColor;
+                });
+                
+                input.click();
+            });
+        });
+
+        // Custom color input
+        const customColorInput = modal.querySelector('input[type="color"]');
+        customColorInput.addEventListener('change', (e) => {
+            onColorSelect(e.target.value);
+            this._closeModal(modal);
+        });
+
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this._closeModal(modal);
+            }
+        });
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.parentNode) {
+                this._closeModal(modal);
+            }
+        });
+    },
+
+    _closeModal(modal) {
+        if (modal.parentNode) {
+            document.body.removeChild(modal);
+        }
+    },
+
+    _ensureHexColor(color) {
+        if (color.startsWith('#')) {
+            return color;
+        }
+        
+        const rgb = color.match(/\d+/g);
+        if (!rgb || rgb.length !== 3) {
+            return color;
+        }
+        
+        const hex = rgb.map(x => {
+            const hex = parseInt(x).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        });
+        
+        return '#' + hex.join('');
+    }
+};
+
 // Context Menu
 contextMenu.innerHTML = `
     <ul>
@@ -315,171 +457,6 @@ contextMenu.innerHTML = `
         <li data-action="delete" style="background-color: #ffebee; color: #d32f2f;">Delete</li>
     </ul>
 `;
-
-function createColorPicker(currentColor, onColorSelect) {
-    const modal = document.createElement('div');
-    modal.className = 'color-picker-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        z-index: 1000;
-        min-width: 300px;
-    `;
-
-    const header = document.createElement('div');
-    header.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    `;
-    
-    const title = document.createElement('h2');
-    title.textContent = 'Color Palette';
-    title.style.cssText = `
-        margin: 0;
-        color: #333;
-        font-size: 1.2rem;
-    `;
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '&times;';
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0 8px;
-        color: #666;
-        transition: color 0.2s;
-    `;
-    closeBtn.addEventListener('mouseover', () => closeBtn.style.color = '#000');
-    closeBtn.addEventListener('mouseout', () => closeBtn.style.color = '#666');
-    closeBtn.addEventListener('click', () => {
-        document.body.removeChild(modal);
-        document.removeEventListener('keydown', handleEscape);
-    });
-    
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-    modal.appendChild(header);
-
-    const content = document.createElement('div');
-    content.innerHTML = `
-        <div class="predefined-colors" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-            ${Object.entries(BUTTON_COLORS).map(([name, color]) => `
-                <div class="color-option-container" style="display: flex; align-items: center; gap: 4px;">
-                    <button class="color-option" style="
-                        background-color: ${color};
-                        width: 32px;
-                        height: 32px;
-                        border: none;
-                        border-radius: 4px;
-                        cursor: pointer;
-                    " data-color="${color}">
-                    </button>
-                    <button class="edit-color-btn" style="
-                        background: none;
-                        border: none;
-                        cursor: pointer;
-                        font-size: 1.2rem;
-                        padding: 4px;
-                    " data-color-name="${name}">✏️</button>
-                </div>
-            `).join('')}
-        </div>
-        <div class="custom-color" style="margin-top: 16px;">
-            <input type="color" value="${currentColor}" style="width: 100%;">
-            <label style="display: block; margin-top: 8px; color: #666;">Custom Color</label>
-        </div>
-    `;
-
-    modal.appendChild(content);
-
-    // Convert RGB to Hex color
-    function rgbToHex(color) {
-        // If already hex, return as is
-        if (color.startsWith('#')) {
-            return color;
-        }
-        
-        // Extract RGB values
-        const rgb = color.match(/\d+/g);
-        if (!rgb || rgb.length !== 3) {
-            return color;
-        }
-        
-        // Convert to hex
-        const hex = rgb.map(x => {
-            const hex = parseInt(x).toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
-        });
-        
-        return '#' + hex.join('');
-    }
-
-    // Event Handlers
-    content.querySelectorAll('.color-option').forEach(button => {
-        button.addEventListener('click', () => {
-            const color = rgbToHex(button.dataset.color);
-            onColorSelect(color);
-            document.body.removeChild(modal);
-        });
-    });
-
-    // Edit button handlers
-    content.querySelectorAll('.edit-color-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const colorName = button.dataset.colorName;
-            const input = document.createElement('input');
-            input.type = 'color';
-            input.value = rgbToHex(BUTTON_COLORS[colorName]);
-            
-            input.addEventListener('change', (e) => {
-                const newColor = e.target.value;
-                BUTTON_COLORS[colorName] = newColor;
-                saveCustomColors();
-                
-                // Update the color button
-                const colorBtn = button.previousElementSibling;
-                colorBtn.style.backgroundColor = newColor;
-                colorBtn.dataset.color = newColor;
-            });
-            
-            input.click();
-        });
-    });
-
-    content.querySelector('input[type="color"]').addEventListener('change', (e) => {
-        onColorSelect(e.target.value);
-        document.body.removeChild(modal);
-    });
-
-    // Close when clicking outside
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            document.body.removeChild(modal);
-        }
-    });
-
-    // Handle escape key
-    function handleEscape(e) {
-        if (e.key === 'Escape' && modal.parentNode) {
-            document.body.removeChild(modal);
-            document.removeEventListener('keydown', handleEscape);
-        }
-    }
-    document.addEventListener('keydown', handleEscape);
-
-    return modal;
-}
 
 contextMenu.addEventListener('click', (e) => {
     const action = e.target.dataset.action;
@@ -586,12 +563,12 @@ contextMenu.addEventListener('click', (e) => {
             
         case 'color':
             hideContextMenu();
-            const colorPicker = createColorPicker(selectedButton.dataset.color, (color) => {
+            const colorPickerModal = ColorPicker.create(selectedButton.dataset.color, (color) => {
                 selectedButton.dataset.color = color;
                 selectedButton.style.backgroundColor = color;
                 saveSession();
             });
-            document.body.appendChild(colorPicker);
+            document.body.appendChild(colorPickerModal);
             break;
             
         case 'delete':
@@ -651,12 +628,12 @@ document.querySelectorAll('.color-select').forEach(button => {
         const type = button.dataset.colorType;
         const currentColor = button.style.backgroundColor || defaultTheme[`${type}Color`];
         
-        const colorPicker = createColorPicker(currentColor, (color) => {
+        const colorPickerModal = ColorPicker.create(currentColor, (color) => {
             currentTheme[`${type}Color`] = color;
             applyTheme(currentTheme);
         });
         
-        document.body.appendChild(colorPicker);
+        document.body.appendChild(colorPickerModal);
     });
 });
 
