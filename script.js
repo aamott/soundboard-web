@@ -44,6 +44,8 @@ const importBtn = document.getElementById('import-btn');
 const contextMenu = document.getElementById('context-menu');
 const settingsBtn = document.getElementById('settings-btn');
 const settingsDropdown = document.getElementById('settings-dropdown');
+const audioUpload = document.getElementById('audio-upload');
+const uploadAudioBtn = document.getElementById('upload-audio-btn');
 
 // Load custom colors from localStorage
 // This function retrieves saved custom button colors from localStorage and updates the BUTTON_COLORS object.
@@ -888,6 +890,33 @@ importBtn.addEventListener('click', () => {
     
     input.click();
 });
+
+// Handle audio file upload
+uploadAudioBtn.addEventListener('click', () => {
+    audioUpload.click();
+});
+
+// Process selected audio file
+audioUpload.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('audio/') && file.size <= 15000 * 1024) { // Ensure file is audio and under 15 seconds
+        const audioData = await fileToBase64(file);
+        createButton(audioData, '', file.name.split('.')[0]);
+        saveSession();
+    } else {
+        alert('Please upload a valid audio file under 15 seconds.');
+    }
+});
+
+// Convert file to base64
+async function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 
 // This event listener initializes the application.
 document.addEventListener('DOMContentLoaded', () => {
