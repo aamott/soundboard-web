@@ -219,6 +219,7 @@ const ThemeManager = {
 // Audio Recording
 // This function starts the audio recording process.
 async function startRecording() {
+    console.log('Starting recording...');
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
@@ -229,9 +230,12 @@ async function startRecording() {
         };
 
         mediaRecorder.onstop = async () => {
+            console.log('Recording stopped.');
+            console.log('MediaRecorder state:', mediaRecorder.state);
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
             const base64Data = await blobToBase64(audioBlob);
             createButton(base64Data);
+            console.log('Stopping stream tracks.');
             stream.getTracks().forEach(track => track.stop());
         };
 
@@ -247,6 +251,7 @@ async function startRecording() {
 
 // This function stops the audio recording process.
 function stopRecording() {
+    console.log('Stopping recording...');
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         isRecording = false;
@@ -618,18 +623,34 @@ contextMenu.addEventListener('click', (e) => {
             break;
             
         case 'record':
-            if (!isRecording) {
-                const buttonToUpdate = selectedButton;
-                hideContextMenu();
-                startRecording().then(() => {
+            (async () => {
+                if (!isRecording) {
+                    const buttonToUpdate = selectedButton;
+                    hideContextMenu();
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+
                     mediaRecorder.onstop = async () => {
+                        console.log('Recording stopped.');
+                        console.log('MediaRecorder state:', mediaRecorder.state);
                         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                         const base64Data = await blobToBase64(audioBlob);
                         buttonToUpdate.dataset.audioData = base64Data;
                         saveSession();
+                        stream.getTracks().forEach(track => track.stop());
                     };
-                });
-            }
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.textContent = 'Stop Recording';
+                    recordBtn.classList.add('recording');
+                }
+            })();
             break;
             
         case 'shortcut':
