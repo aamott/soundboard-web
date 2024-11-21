@@ -11,6 +11,7 @@
     --text: white;
     --button-color: #9C27B0;
     --text-color: #FFFFFF;
+    --header-margin: 60px;
 }
 
 body {
@@ -57,9 +58,10 @@ h1 {
     width: 100%;
     height: calc(100vh - 200px);
     margin: 20px auto;
+    margin-top: var(--header-margin); /* Use CSS variable for top margin */
     border: 2px dashed transparent;
     border-radius: 10px;
-    overflow: auto;
+    overflow: visible; /* Change overflow to visible to ensure buttons are not hidden */
     transition: var(--transition);
 }
 
