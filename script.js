@@ -590,10 +590,13 @@ const ColorPicker = {
 contextMenu.innerHTML = `
     <ul>
         <li data-action="rename">Rename</li>
-        <li data-action="record">Record Again</li>
+        <li data-action="color">Change Color</li>
         <li data-action="shortcut">Set Shortcut</li>
         <li data-action="remove-shortcut">Remove Shortcut</li>
-        <li data-action="color">Change Color</li>
+        <hr>
+        <li data-action="record">Record Again</li>
+        <li data-action="upload-audio">Upload Audio</li>
+        <hr>
         <li data-action="delete" style="background-color: #ffebee; color: #d32f2f;">Delete</li>
     </ul>
 `;
@@ -710,6 +713,11 @@ contextMenu.addEventListener('click', (e) => {
                 saveSession();
             });
             document.body.appendChild(colorPickerModal);
+            break;
+            
+        case 'upload-audio':
+            audioUpload.dataset.action = 'replace'; // Set action to replace audio
+            audioUpload.click();
             break;
             
         case 'delete':
@@ -891,8 +899,9 @@ importBtn.addEventListener('click', () => {
     input.click();
 });
 
-// Handle audio file upload
+// Main Upload Audio Button - Add new button with uploaded audio
 uploadAudioBtn.addEventListener('click', () => {
+    audioUpload.dataset.action = 'add'; // Set action to add new button
     audioUpload.click();
 });
 
@@ -901,7 +910,12 @@ audioUpload.addEventListener('change', async (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('audio/') && file.size <= 15000 * 1024) { // Ensure file is audio and under 15 seconds
         const audioData = await fileToBase64(file);
-        createButton(audioData, '', file.name.split('.')[0]);
+        if (audioUpload.dataset.action === 'add') {
+            createButton(audioData, '', file.name.split('.')[0]); // Add new button
+        } else if (audioUpload.dataset.action === 'replace' && selectedButton) {
+            selectedButton.dataset.audioData = audioData; // Replace audio of selected button
+            updateButtonContent(selectedButton, selectedButton.querySelector('.shortcut')?.textContent || '');
+        }
         saveSession();
     } else {
         alert('Please upload a valid audio file under 15 seconds.');
