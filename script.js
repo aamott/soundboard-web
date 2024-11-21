@@ -23,7 +23,7 @@ const defaultTheme = {
 };
 
 // Global State
-// Indicates whether the app is currently in edit mode, allowing buttons to be dragged
+// Indicates whether the app is currently in edit layout mode, allowing buttons to be dragged
 let isEditMode = false;
 // Indicates whether a recording is currently in progress
 let isRecording = false;
@@ -877,11 +877,11 @@ recordBtn.addEventListener('click', () => {
     }
 });
 
-// This event listener toggles the edit mode.
+// This event listener toggles the edit layout mode.
 editBtn.addEventListener('click', () => {
     isEditMode = !isEditMode;
     soundboard.classList.toggle('edit-mode');
-    editBtn.textContent = isEditMode ? 'Save Layout' : 'Edit Mode';
+    editBtn.textContent = isEditMode ? 'Save Layout' : 'Edit Layout';
 });
 
 // This event listener exports the current session.
