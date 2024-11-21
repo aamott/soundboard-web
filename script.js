@@ -3,6 +3,7 @@ const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 const GRID_SIZE = 8;
 
 // Default Colors and Theme
+// This object stores the default colors used in the application.
 const BUTTON_COLORS = {
     'Background': '#FFFFFF',
     'Foreground': '#000000',
@@ -14,6 +15,7 @@ const BUTTON_COLORS = {
     'Teal': '#009688'
 };
 
+// This object stores the default theme settings.
 const defaultTheme = {
     backgroundColor: '#FFFFFF',
     buttonColor: '#9C27B0',
@@ -21,9 +23,11 @@ const defaultTheme = {
 };
 
 // Global State
-let currentTheme = { ...defaultTheme };
-let isRecording = false;
+// Indicates whether the app is currently in edit mode, allowing buttons to be dragged
 let isEditMode = false;
+// Indicates whether a recording is currently in progress
+let isRecording = false;
+// Manages the recording process using the MediaRecorder API
 let mediaRecorder = null;
 let audioChunks = [];
 let selectedButton = null;
@@ -42,6 +46,7 @@ const settingsBtn = document.getElementById('settings-btn');
 const settingsDropdown = document.getElementById('settings-dropdown');
 
 // Load custom colors from localStorage
+// This function retrieves saved custom button colors from localStorage and updates the BUTTON_COLORS object.
 function loadCustomColors() {
     const savedColors = localStorage.getItem('customButtonColors');
     if (savedColors) {
@@ -56,19 +61,23 @@ function loadCustomColors() {
 }
 
 // Save custom colors to localStorage
+// This function saves the current BUTTON_COLORS to localStorage for persistence.
 function saveCustomColors() {
     localStorage.setItem('customButtonColors', JSON.stringify(BUTTON_COLORS));
 }
 
 // Theme Management Module
+// This module handles the loading, applying, and resetting of themes.
 const ThemeManager = {
     currentTheme: { ...defaultTheme },
 
+    // Initialize the theme manager and apply the default theme.
     init() {
         this.loadTheme();
         this.setupEventListeners();
     },
 
+    // Load a theme from localStorage and apply it.
     loadTheme() {
         const savedTheme = localStorage.getItem('soundboardTheme');
         if (savedTheme) {
@@ -77,6 +86,7 @@ const ThemeManager = {
         }
     },
 
+    // Apply a given theme to the application.
     applyTheme(theme) {
         document.body.style.backgroundColor = theme.backgroundColor;
         document.documentElement.style.setProperty('--button-color', theme.buttonColor);
@@ -103,6 +113,7 @@ const ThemeManager = {
         this.currentTheme = theme;
     },
 
+    // Reset the theme to default settings.
     reset() {
         if (confirm('This will reset all color customizations to default. Make sure to export your theme first if you want to save it. Continue?')) {
             this.currentTheme = { ...defaultTheme };
@@ -123,6 +134,7 @@ const ThemeManager = {
         }
     },
 
+    // Export the current theme settings to a downloadable file.
     exportTheme() {
         const themeData = JSON.stringify({
             theme: this.currentTheme,
@@ -141,6 +153,7 @@ const ThemeManager = {
         URL.revokeObjectURL(url);
     },
 
+    // Import theme settings from a file and apply them.
     importTheme() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -177,6 +190,7 @@ const ThemeManager = {
         input.click();
     },
 
+    // Set up event listeners for theme-related actions.
     setupEventListeners() {
         // Color selection buttons
         document.querySelectorAll('.color-select').forEach(button => {
@@ -201,6 +215,7 @@ const ThemeManager = {
 };
 
 // Audio Recording
+// This function starts the audio recording process.
 async function startRecording() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -228,6 +243,7 @@ async function startRecording() {
     }
 }
 
+// This function stops the audio recording process.
 function stopRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
@@ -238,6 +254,7 @@ function stopRecording() {
 }
 
 // Button Management
+// This function creates a new sound button with the given audio data.
 function createButton(audioData, shortcutKey = '', name = 'Sound', position = null, color = null) {
     const button = document.createElement('button');
     button.className = 'sound-button';
@@ -291,6 +308,7 @@ function createButton(audioData, shortcutKey = '', name = 'Sound', position = nu
     return button;
 }
 
+// This function updates the content of a sound button.
 function updateButtonContent(button, shortcutKey = '') {
     const nameSpan = document.createElement('span');
     nameSpan.className = 'name';
@@ -308,6 +326,7 @@ function updateButtonContent(button, shortcutKey = '') {
 }
 
 // Drag and Drop
+// This event listener handles the dragging of sound buttons.
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Shift') {
         isShiftPressed = true;
@@ -380,6 +399,7 @@ document.addEventListener('selectstart', (e) => {
 });
 
 // Context Menu Functions
+// This function shows the context menu at the given position.
 function showContextMenu(x, y) {
     contextMenu.style.display = 'block';
     contextMenu.style.left = x + 'px';
@@ -398,6 +418,7 @@ function showContextMenu(x, y) {
     }
 }
 
+// This function hides the context menu.
 function hideContextMenu() {
     contextMenu.style.display = 'none';
 }
@@ -415,7 +436,9 @@ soundboard.addEventListener('contextmenu', (e) => {
 });
 
 // Color Picker Module
+// This module handles the color picker functionality.
 const ColorPicker = {
+    // Create a color picker modal with the given initial color.
     create(currentColor, onColorSelect) {
         const modal = document.createElement('div');
         modal.className = 'color-picker-modal';
@@ -438,6 +461,7 @@ const ColorPicker = {
         return modal;
     },
 
+    // Create the content of the color picker modal.
     _createModalContent(currentColor) {
         return `
             <div class="color-picker-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -472,6 +496,7 @@ const ColorPicker = {
         `;
     },
 
+    // Attach event listeners to the color picker modal.
     _attachEventListeners(modal, onColorSelect) {
         // Close button
         const closeBtn = modal.querySelector('.close-btn');
@@ -531,12 +556,14 @@ const ColorPicker = {
         });
     },
 
+    // Close the color picker modal.
     _closeModal(modal) {
         if (modal.parentNode) {
             document.body.removeChild(modal);
         }
     },
 
+    // Ensure a color is in hex format.
     _ensureHexColor(color) {
         if (color.startsWith('#')) {
             return color;
@@ -557,6 +584,7 @@ const ColorPicker = {
 };
 
 // Context Menu
+// This is the HTML content of the context menu.
 contextMenu.innerHTML = `
     <ul>
         <li data-action="rename">Rename</li>
@@ -568,6 +596,7 @@ contextMenu.innerHTML = `
     </ul>
 `;
 
+// This event listener handles the context menu actions.
 contextMenu.addEventListener('click', (e) => {
     const action = e.target.dataset.action;
     if (!action || !selectedButton) return;
@@ -694,6 +723,7 @@ contextMenu.addEventListener('click', (e) => {
 });
 
 // Add keyboard shortcut functionality
+// This function adds a keyboard shortcut to a sound button.
 function addKeyboardShortcut(button, key) {
     // Remove old shortcut if it exists
     if (button.keyHandler) {
@@ -711,6 +741,7 @@ function addKeyboardShortcut(button, key) {
     document.addEventListener('keydown', handler);
 }
 
+// This function removes a keyboard shortcut from a sound button.
 function removeKeyboardShortcut(button) {
     if (button.keyHandler) {
         document.removeEventListener('keydown', button.keyHandler);
@@ -719,6 +750,7 @@ function removeKeyboardShortcut(button) {
 }
 
 // Settings Management
+// This event listener toggles the settings dropdown.
 settingsBtn.addEventListener('click', () => {
     isSettingsOpen = !isSettingsOpen;
     settingsDropdown.style.display = isSettingsOpen ? 'block' : 'none';
@@ -733,6 +765,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Session Management
+// This function saves the current session to localStorage.
 function saveSession() {
     const buttons = Array.from(soundboard.getElementsByClassName('sound-button')).map(button => ({
         name: button.dataset.name,
@@ -748,6 +781,7 @@ function saveSession() {
     localStorage.setItem('soundboardSession', JSON.stringify({ buttons }));
 }
 
+// This function loads the saved session from localStorage.
 function loadSession() {
     const session = JSON.parse(localStorage.getItem('soundboardSession'));
     if (!session) return;
@@ -769,6 +803,7 @@ function loadSession() {
 }
 
 // Utility Functions
+// This function converts a blob to a base64 string.
 async function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -778,11 +813,13 @@ async function blobToBase64(blob) {
     });
 }
 
+// This function converts a base64 string to a blob.
 async function base64ToBlob(base64Data) {
     const response = await fetch(base64Data);
     return response.blob();
 }
 
+// This function plays an audio file from a base64 string.
 async function playAudio(base64Data) {
     try {
         const audioBlob = await base64ToBlob(base64Data);
@@ -800,6 +837,7 @@ async function playAudio(base64Data) {
 }
 
 // Event Listeners
+// This event listener toggles the recording state.
 recordBtn.addEventListener('click', () => {
     if (isRecording) {
         stopRecording();
@@ -808,12 +846,14 @@ recordBtn.addEventListener('click', () => {
     }
 });
 
+// This event listener toggles the edit mode.
 editBtn.addEventListener('click', () => {
     isEditMode = !isEditMode;
     soundboard.classList.toggle('edit-mode');
     editBtn.textContent = isEditMode ? 'Save Layout' : 'Edit Mode';
 });
 
+// This event listener exports the current session.
 exportBtn.addEventListener('click', () => {
     const session = localStorage.getItem('soundboardSession');
     const blob = new Blob([session], { type: 'application/json' });
@@ -828,6 +868,7 @@ exportBtn.addEventListener('click', () => {
     URL.revokeObjectURL(url);
 });
 
+// This event listener imports a session from a file.
 importBtn.addEventListener('click', () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -848,6 +889,7 @@ importBtn.addEventListener('click', () => {
     input.click();
 });
 
+// This event listener initializes the application.
 document.addEventListener('DOMContentLoaded', () => {
     loadSession();
     ThemeManager.init();
@@ -870,4 +912,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// This interval saves the session every 30 seconds.
 setInterval(saveSession, AUTO_SAVE_INTERVAL);
